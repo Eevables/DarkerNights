@@ -1,0 +1,11 @@
+    name: DarkerNights
+    main: clienthax.darkerNights.DarkerNights
+    version: 1.0
+    description: DarkerNights
+    permissions:
+      darkernights.bypass:
+        description: bypass darkernights
+        default: false
+    commands:
+      testblind:
+      removeblind:
