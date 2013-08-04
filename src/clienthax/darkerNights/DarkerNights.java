@@ -1,5 +1,8 @@
 package clienthax.darkerNights;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -18,6 +21,7 @@ public class DarkerNights extends JavaPlugin implements Listener {
 	public void onEnable()
 	{
 		getServer().getPluginManager().registerEvents(this, this);
+		getCommand("darkernights").setExecutor(new DarkerNightsCommand(this));
 	}
 	
 	@EventHandler()
@@ -83,6 +87,5 @@ public class DarkerNights extends JavaPlugin implements Listener {
 			return true;
 		
 		return false;
-		
 	}
 }
