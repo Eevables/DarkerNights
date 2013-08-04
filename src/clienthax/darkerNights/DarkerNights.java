@@ -1,10 +1,7 @@
 package clienthax.darkerNights;
 
-import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -64,32 +61,6 @@ public class DarkerNights extends JavaPlugin implements Listener {
 	{
 		event.getPlayer().removePotionEffect(PotionEffectType.BLINDNESS);
 	}
-
-	public boolean torchInArea(Player player, int distance)
-	{
-		Location playerLocation = player.getLocation();
-		Location locA = playerLocation.clone().add(-distance, -distance, -distance);
-		Location locB = playerLocation.clone().add(distance, distance, distance);
-		
-	
-		for(int x = locA.getBlockX(); x < locB.getBlockX(); x++)
-		for(int y = locA.getBlockY(); y < locB.getBlockY(); y++)
-		for(int z = locA.getBlockZ(); z < locB.getBlockZ(); z++)
-		{
-			Block block = player.getWorld().getBlockAt(x,y,z);
-			if(block != null && !block.isEmpty())
-			{
-				if(block.getType().equals(Material.TORCH))
-				{
-					getLogger().info("torch");
-					return true;
-				}
-			}
-		}
-		
-		return false;
-				
-	}
 	
 	public boolean darkUnderPlayer(Player player)
 	{
@@ -97,35 +68,6 @@ public class DarkerNights extends JavaPlugin implements Listener {
 		if(block.getLightLevel() < 5)
 			return true;
 		return false;
-	}
-	
-
-	public boolean darkInArea(Player player, int distance, int lightLevel)
-	{
-		Location playerLocation = player.getLocation();
-		Location locA = playerLocation.clone().add(-distance, -distance, -distance);
-		Location locB = playerLocation.clone().add(distance, distance, distance);
-		
-	
-		for(int x = locA.getBlockX(); x < locB.getBlockX(); x++)
-		for(int y = locA.getBlockY(); y < locB.getBlockY(); y++)
-		for(int z = locA.getBlockZ(); z < locB.getBlockZ(); z++)
-		{
-			Block block = player.getWorld().getBlockAt(x,y,z);
-			if(block != null && block.isEmpty())
-			{
-				if(block.getRelative(BlockFace.UP).isEmpty())
-				{
-					
-					if(block.getLightLevel() < lightLevel)
-					return true;
-				}
-				
-			}
-		}
-		
-		return false;
-				
 	}
 	
 	public boolean isNighttimeInWorld(World world)
