@@ -1,8 +1,5 @@
 package clienthax.darkerNights;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
