@@ -15,64 +15,62 @@ import org.bukkit.potion.PotionEffectType;
 
 public class DarkerNights extends JavaPlugin implements Listener {
 	
-	public void onEnable()
-	{
+	public void onEnable() {
 		getServer().getPluginManager().registerEvents(this, this);
 		getCommand("darkernights").setExecutor(new DarkerNightsCommand(this));
 	}
 	
 	@EventHandler()
-	public void onPlayerMove(PlayerMoveEvent event)
-	{	
-		if(!isNighttimeInWorld(event.getPlayer().getWorld()))
-		{
+	public void onPlayerMove(PlayerMoveEvent event) {	
+		if (!isNighttimeInWorld(event.getPlayer().getWorld())) {
 			event.getPlayer().removePotionEffect(PotionEffectType.BLINDNESS);
 			return;
 		}
 		
-		if(darkUnderPlayer(event.getPlayer()))
-		{
-			if(!event.getPlayer().hasPermission("darkernights.bypass"))
-			{
-			PotionEffect blindness = new PotionEffect(PotionEffectType.BLINDNESS, 999999, 0);
-			event.getPlayer().addPotionEffect(blindness);
-			}
-		}
-		else
-		{
+		if (event.getPlayer().getActivePotionEffects().contains(PotionEffectType.NIGHT_VISION)) {
+			if (event.getPlayer().getActivePotionEffects().contains(PotionEffectType.BLINDNESS)) {
 				event.getPlayer().removePotionEffect(PotionEffectType.BLINDNESS);
+				return;
+			}
+			return;
+		}
+		
+		if (darkUnderPlayer(event.getPlayer())) {
+			
+			if (!event.getPlayer().hasPermission("darkernights.bypass") && !(event.getPlayer().getActivePotionEffects().contains(PotionEffectType.NIGHT_VISION))) {
+				PotionEffect blindness = new PotionEffect(PotionEffectType.BLINDNESS, 999999, 0);
+				event.getPlayer().addPotionEffect(blindness);
+			}
+		} else {
+			event.getPlayer().removePotionEffect(PotionEffectType.BLINDNESS);
 		}
 			
 	}
 	
 	@EventHandler
-	public void onRespawn(PlayerRespawnEvent event)
-	{
+	public void onRespawn(PlayerRespawnEvent event) {
 		event.getPlayer().removePotionEffect(PotionEffectType.BLINDNESS);
 	}
 	
 	@EventHandler
-	public void onLeaveServer(PlayerQuitEvent event)
-	{
+	public void onLeaveServer(PlayerQuitEvent event) {
 		event.getPlayer().removePotionEffect(PotionEffectType.BLINDNESS);
 	}
 	
 	@EventHandler
-	public void onJoinServer(PlayerJoinEvent event)
-	{
+	public void onJoinServer(PlayerJoinEvent event) {
 		event.getPlayer().removePotionEffect(PotionEffectType.BLINDNESS);
 	}
 	
-	public boolean darkUnderPlayer(Player player)
-	{
+	public boolean darkUnderPlayer(Player player) {
 		Block block = player.getLocation().getBlock();
-		if(block.getLightLevel() < 5)
+		if (block.getLightLevel() < 5) {
 			return true;
+		}
 		return false;
 	}
 	
-	public boolean isNighttimeInWorld(World world)
-	{
+	public boolean isNighttimeInWorld(World world) {
 		/*
 		<Riking> 0-12000 is day
 		<Riking> 12K-13K is sunset, approx
@@ -80,9 +78,9 @@ public class DarkerNights extends JavaPlugin implements Listener {
 		 */
 		Long time = world.getTime();
 		
-		if(time >= 13000 && time <= 23000)
+		if (time >= 13000 && time <= 23000) {
 			return true;
-		
+		}
 		return false;
 	}
 }
