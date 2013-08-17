@@ -1,10 +1,13 @@
 package clienthax.darkerNights;
 
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -18,6 +21,14 @@ import org.bukkit.potion.PotionEffectType;
  */
 public class DarkerNights extends JavaPlugin implements Listener {
 
+	/**
+	 * Contains the Blindness effect to use.
+	 */
+	private static final PotionEffect blindnessEffect = PotionEffectType.BLINDNESS.createEffect(999999, 0);
+	
+	/**
+	 * Runs when the plugin is enabled.
+	 */
 	@Override
 	public void onEnable() {
 		getServer().getPluginManager().registerEvents(this, this);
@@ -31,28 +42,7 @@ public class DarkerNights extends JavaPlugin implements Listener {
 	 */
 	@EventHandler
 	public void onPlayerMove(PlayerMoveEvent event) {
-
-		// Get the player
-		Player player = event.getPlayer();
-
-		// Check to see if it is night time in the current world. If it is,
-		// remove the blindness. Similarly, if the player has the bypass permission,
-		// just remove the blindness.
-		if (!isNighttimeInWorld(event.getPlayer().getWorld()) || 
-				player.hasPermission("darkernights.bypass") ||
-				player.hasPotionEffect(PotionEffectType.NIGHT_VISION)) {
-			
-			player.removePotionEffect(PotionEffectType.BLINDNESS);
-			return;
-		}
-
-		// Check the light levels
-		if (darkUnderPlayer(event.getPlayer())) {
-			event.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 999999, 0));
-		} else {
-			event.getPlayer().removePotionEffect(PotionEffectType.BLINDNESS);
-		}
-
+		DarkerNights.checkBlindness(event.getPlayer());
 	}
 
 	/**
@@ -62,7 +52,7 @@ public class DarkerNights extends JavaPlugin implements Listener {
 	 */
 	@EventHandler
 	public void onRespawn(PlayerRespawnEvent event) {
-		event.getPlayer().removePotionEffect(PotionEffectType.BLINDNESS);
+		DarkerNights.checkBlindness(event.getPlayer());
 	}
 
 	/**
@@ -72,7 +62,7 @@ public class DarkerNights extends JavaPlugin implements Listener {
 	 */
 	@EventHandler
 	public void onLeaveServer(PlayerQuitEvent event) {
-		event.getPlayer().removePotionEffect(PotionEffectType.BLINDNESS);
+		DarkerNights.checkBlindness(event.getPlayer());
 	}
 
 	/**
@@ -82,7 +72,31 @@ public class DarkerNights extends JavaPlugin implements Listener {
 	 */
 	@EventHandler
 	public void onJoinServer(PlayerJoinEvent event) {
-		event.getPlayer().removePotionEffect(PotionEffectType.BLINDNESS);
+		DarkerNights.checkBlindness(event.getPlayer());
+	}
+	
+	/**
+	 * Fires when an item is consumed. As we are not altering the event,
+	 * but we do want to know if it is cancelled, we run it on the Monitor
+	 * priority.
+	 * 
+	 * @param event Event to handle.
+	 */
+	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+	public void onItemConsume(PlayerItemConsumeEvent event) {
+		if (event.getItem().getType() == Material.MILK_BUCKET) {
+			// We don't want to cancel the event, but we want to re-apply darkness after the event
+			// has completed - if needed, so that the player can't cheat using the milk.
+			final Player player = event.getPlayer();
+			getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+
+				@Override
+				public void run() {
+					DarkerNights.checkBlindness(player);
+				}
+				
+			});
+		}
 	}
 
 	/**
@@ -91,18 +105,42 @@ public class DarkerNights extends JavaPlugin implements Listener {
 	 * @param player Player to check
 	 * @return true if the light level is below 5 units
 	 */
-	private boolean darkUnderPlayer(Player player) {
+	private static boolean darkUnderPlayer(Player player) {
 		Block block = player.getLocation().getBlock();
 		return block.getLightLevel() < 5; 
 	}
 
+	private static void checkBlindness(Player player) {
+		if (checkPermission(player, "darkernights.bypass") 
+				|| !isNighttimeInWorld(player.getWorld())
+				|| player.hasPotionEffect(PotionEffectType.NIGHT_VISION)
+				|| !darkUnderPlayer(player)) {
+			removeBlindness(player);
+		}
+		else {
+			setBlindness(player);
+		}
+	}
+	
+	private static void removeBlindness(Player player) {
+		player.removePotionEffect(PotionEffectType.BLINDNESS);
+	}
+	
+	private static void setBlindness(Player player) {
+		player.addPotionEffect(blindnessEffect, true);
+	}
+	
+	private static boolean checkPermission(Player player, String permission) {
+		return (player.hasPermission(permission) || player.isOp());
+	}
+	
 	/**
 	 * Checks whether it is night in the world.
 	 * 
 	 * @param world World to check
 	 * @return true if it is night
 	 */
-	private boolean isNighttimeInWorld(World world) {
+	private static boolean isNighttimeInWorld(World world) {
 		/*
 		 * <Riking> 0-12000 is day 
 		 * <Riking> 12K-13K is sunset, approx 
